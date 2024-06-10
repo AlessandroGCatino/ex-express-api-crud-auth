@@ -4,6 +4,9 @@ const { create, show, index, update, destroy } = require('../controllers/control
 const validator = require('../middlewares/validator.js');
 const {verifyID} = require('../validators/verifyID.js');
 const {verifyRequest} = require('../validators/verifyTags.js');
+const authenticateToken = require('../middlewares/auth.js');
+
+router.use(authenticateToken);
 
 router.post('/', validator(verifyRequest), create);
 
