@@ -4,12 +4,19 @@ const port = process.env.PORT || 3000;
 const routerPosts = require('./routers/routerPosts.js');
 const routerCategories = require('./routers/routerCategories.js');
 const routerTags = require('./routers/routerTags.js');
+const routerAuth = require('./routers/routerAuth.js');
 const errorHandler = require('./middlewares/errorHandler.js');
 const missingPage = require('./middlewares/missingPage.js');
+const cors = require("cors");
 
-app.use(express.json());
 
-app.use("/posts", routerPosts);
+app.use(cors())
+
+app.use(express.json())
+
+app.use("/auth", routerAuth)
+
+app.use("/posts", routerPosts)
 
 app.use("/categories", routerCategories)
 
