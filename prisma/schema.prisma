@@ -27,6 +27,8 @@ model Post {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
 }
 
 model Category {
@@ -50,6 +52,7 @@ model User {
   email     String   @unique
   username  String?
   password  String
+  posts     Post[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
