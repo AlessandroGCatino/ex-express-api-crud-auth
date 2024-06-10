@@ -66,6 +66,7 @@ const index = async (req, res, next) => {
     try{
         const { title, content, page=1, postPerPage=2 } = req.query;
         let { published } = req.query 
+
         if (published){
             if (published === "true") {
                 published = true;
@@ -132,6 +133,25 @@ const update = async (req, res, next) => {
         const { title, slug, image, content, published, categoryID, userId } = req.body;
         const tags = req.body.tags;
 
+        // bonus: verifichiamo se l'utente che sta modificando il post è l'utente che ha creato il post
+
+        const userEmail = req.user.email;
+        const requestingUser = await prisma.user.findUnique({
+            where: {
+                email: userEmail
+            }
+        });
+        
+        const thisPost = await prisma.Post.findUnique({
+            where: {
+                slug: req.params.slug
+            }
+        });
+        
+        if(requestingUser.id !== thisPost.userId){
+            throw new Error("Non sei autorizzato a modificare questo post");
+        }
+
         // definiamo la struttura di data e il collegamento con i tags
         const data = {
             ...(title && { title }),
@@ -165,9 +185,29 @@ const update = async (req, res, next) => {
 const destroy = async (req, res, next) => {
     try{
         const checkExist = await prisma.Post.findUnique({ where: {slug: req.params.slug}});
+
         if(!checkExist){
             res.status(404).send({ error: "Post not found, can't delete" });
         }
+
+        // bonus: verifichiamo se l'utente che sta eliminando il post è l'utente che ha creato il post
+        const userEmail = req.user.email;
+        const requestingUser = await prisma.user.findUnique({
+            where: {
+                email: userEmail
+            }
+        });
+        
+        const thisPost = await prisma.Post.findUnique({
+            where: {
+                slug: req.params.slug
+            }
+        });
+        
+        if(requestingUser.id !== thisPost.userId){
+            throw new Error("Non sei autorizzato a modificare questo post");
+        }
+
         const deletedPost = await prisma.Post.delete({
             where: { slug: req.params.slug }
         });
