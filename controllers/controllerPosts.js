@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 const create = async (req, res, next) => {
     try{
         // prendiamo i dati necessari per la creazione del post
-        const { title, slug, image, content, published, categoryID, tags} = req.body;
+        const { title, slug, image, content, published, categoryID, tags, userId} = req.body;
         // definiamo la struttura di data e il collegamento con i tags
         const data = {
             title,
@@ -13,6 +13,7 @@ const create = async (req, res, next) => {
             content,
             published,
             categoryID,
+            userId,
             tags : {
                 connect: tags.map(tagId => ({ id: tagId }))
             }
@@ -44,6 +45,11 @@ const show = async (req, res, next) => {
                     title: true
                     }
                 },
+                user: {
+                    select: {
+                        username: true
+                    }
+                }
             }
         });
         if (post) {
@@ -106,6 +112,11 @@ const index = async (req, res, next) => {
                     title: true
                     }
                 },
+                user: {
+                    select: {
+                        username: true
+                    }
+                }
             },
             take: parseInt(postPerPage),
             skip: offset
@@ -118,21 +129,24 @@ const index = async (req, res, next) => {
 
 const update = async (req, res, next) => {
     try{
-        const { title, slug, image, content, published, categoryID } = req.body;
+        const { title, slug, image, content, published, categoryID, userId } = req.body;
         const tags = req.body.tags;
 
         // definiamo la struttura di data e il collegamento con i tags
         const data = {
-            title,
-            slug,
-            image,
-            content,
-            published,
-            categoryID,
-            tags: {
+            ...(title && { title }),
+            ...(slug && { slug }),
+            ...(image && { image }),
+            ...(content && { content }),
+            ...(published !== undefined && { published }),
+            ...(categoryID && { categoryID }),
+            ...(userId && { userId }),
+            ...(tags && tags.length > 0 && {
+              tags: {
                 set: tags.map(tagId => ({ id: tagId }))
-            }
-        }
+              }
+            })
+          }
         //stilizziamo lo slug
         data.slug = data.slug.toLowerCase();
         const updatedPost = await prisma.Post.update({

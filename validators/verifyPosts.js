@@ -86,6 +86,25 @@ const verifyRequest = {
             }
         }
     },
+    userId: {
+        in: ["body"],
+        isInt: {
+            errorMessage: "L'id dell'utente deve essere un intero",
+            bail: true
+        },
+        custom: {
+            options: async (userId) => {
+                const searchID = parseInt(userId);
+                const category = await prisma.user.findUnique({
+                    where: {id: searchID}
+                });
+                if (!category) {
+                    throw new Error("L'utente non esiste");
+                }
+                return true;
+            }
+        }
+    },
     tags: {
         in : ["body"],
         notEmpty: {
@@ -99,8 +118,6 @@ const verifyRequest = {
         custom: {
             options: async (tags) => {
                 try{
-
-                    console.log(tags);
                     if(tags.length === 0){
                         throw new Error(`Inserisci almeno un tag`);
                     }
@@ -129,6 +146,8 @@ const verifyRequest = {
         }
     }
 }
+
+
 
 module.exports = {verifyRequest}
 
