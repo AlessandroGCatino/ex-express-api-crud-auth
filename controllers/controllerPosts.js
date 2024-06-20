@@ -1,14 +1,17 @@
 const {PrismaClient} = require('@prisma/client');
+const e = require('express');
 const prisma = new PrismaClient();
 
 const create = async (req, res, next) => {
     try{
         // prendiamo i dati necessari per la creazione del post
-        const { title, slug, image, content, published, categoryID, tags, userId} = req.body;
+        const { title, /* slug ,*/ image, content, published, categoryID, userId} = req.body;
+        let {tags} = req.body;
         // definiamo la struttura di data e il collegamento con i tags
+        tags = tags.map(tag => parseInt(tag, 10))
         const data = {
             title,
-            slug,
+            // slug,
             image,
             content,
             published,
@@ -18,13 +21,34 @@ const create = async (req, res, next) => {
                 connect: tags.map(tagId => ({ id: tagId }))
             }
         }
+
+        if(req.file){
+            data.image = `${HOST}:${port}/post_pics/${req.file.filename}`;
+        }
         //stilizziamo lo slug
-        data.slug = data.slug.toLowerCase();
+        let userslug = data.title.toLowerCase().replace(/\s+/g, "-");
+        let slugList = await prisma.Post.findMany({});
+        slugList = slugList.map(e => e.slug)
+        let counter = 1
+        let slug = userslug
+        while (slugList.includes(slug)){
+            slug = `${userslug}-${counter}`;
+            counter++
+        }
+        data.slug = slug;
+
+        data.categoryID = parseInt(data.categoryID)
+
+
+        data.published === "false"? data.published = false : data.published = true
 
         const newPost = await prisma.Post.create({data})
         res.status(200).send(newPost);
 
     } catch (e) {
+        if(req.file){
+            deletePic('post_pics', req.file.filename);
+        }
         next(e);
     }
 }
@@ -103,26 +127,22 @@ const index = async (req, res, next) => {
                 }
             },
             include: {
-                category: {
-                    select: {
-                        title: true
-                    }
-                },
-                tags: {
-                    select: {
-                    title: true
-                    }
-                },
+                category: true
+                ,
+                tags: true,
                 user: {
                     select: {
                         username: true
                     }
                 }
             },
+            orderBy: {
+                id: 'desc'
+            },
             take: parseInt(postPerPage),
             skip: offset
         });
-        res.status(200).send({posts: posts, page: `${page} di ${totalPages}`, totalPosts: totalPosts});
+        res.status(200).send({posts: posts, page: page, totalPages: totalPages, totalPosts: totalPosts});
     } catch(e) {
         next(e);
     }

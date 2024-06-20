@@ -16,20 +16,20 @@ const verifyRequest = {
             errorMessage: 'Il titolo deve essere una stringa'
         }
     },
-    slug: {
-        notEmpty: {
-            errorMessage: 'Inserisci lo slug',
-            bail: true
-        },
-        isLength: {
-            options: { min: 5},
-            errorMessage: 'Lo slug deve essere lungo almeno 5 caratteri',
-            bail: true
-        },
-        isString: {
-            errorMessage: 'Lo slug deve essere una stringa'
-        }
-    },
+    // slug: {
+    //     notEmpty: {
+    //         errorMessage: 'Inserisci lo slug',
+    //         bail: true
+    //     },
+    //     isLength: {
+    //         options: { min: 5},
+    //         errorMessage: 'Lo slug deve essere lungo almeno 5 caratteri',
+    //         bail: true
+    //     },
+    //     isString: {
+    //         errorMessage: 'Lo slug deve essere una stringa'
+    //     }
+    // },
     image: {
         notEmpty: {
             errorMessage: "Inserisci l'immagine",
@@ -68,16 +68,12 @@ const verifyRequest = {
         }
     },
     categoryID: {
-        in: ["body"],
-        isInt: {
-            errorMessage: "L'id della categoria deve essere un intero",
-            bail: true
-        },
+        in: ["body"],        
         custom: {
-            options: async (catId) => {
-                const searchID = parseInt(catId);
-                const category = await prisma.Category.findUnique({
-                    where: {id: searchID}
+            options: async (value) => {
+                const categoryID = parseInt(value);
+                const category = await prisma.category.findUnique({
+                    where: {id: categoryID}
                 });
                 if (!category) {
                     throw new Error("La categoria non esiste");
@@ -86,25 +82,25 @@ const verifyRequest = {
             }
         }
     },
-    userId: {
-        in: ["body"],
-        isInt: {
-            errorMessage: "L'id dell'utente deve essere un intero",
-            bail: true
-        },
-        custom: {
-            options: async (userId) => {
-                const searchID = parseInt(userId);
-                const category = await prisma.user.findUnique({
-                    where: {id: searchID}
-                });
-                if (!category) {
-                    throw new Error("L'utente non esiste");
-                }
-                return true;
-            }
-        }
-    },
+    // userId: {
+    //     in: ["body"],
+    //     isInt: {
+    //         errorMessage: "L'id dell'utente deve essere un intero",
+    //         bail: true
+    //     },
+    //     custom: {
+    //         options: async (userId) => {
+    //             const searchID = parseInt(userId);
+    //             const category = await prisma.user.findUnique({
+    //                 where: {id: searchID}
+    //             });
+    //             if (!category) {
+    //                 throw new Error("L'utente non esiste");
+    //             }
+    //             return true;
+    //         }
+    //     }
+    // },
     tags: {
         in : ["body"],
         notEmpty: {
@@ -126,11 +122,21 @@ const verifyRequest = {
                     if(checkId){
                         throw new Error(`Verifica che tutti i tag siano numeri interi`);
                     }
+                    
+                    const intTags = tags.map(tagID => {
+                        const intTagID = parseInt(tagID, 10);
+                        if (isNaN(intTagID)) {
+                            throw new Error(`Verifica che tutti i tag siano numeri interi`);
+                        }
+                        return intTagID;
+                    });
     
+                    tags = intTags
+
                     const linkedTags = await prisma.tag.findMany({
                         where: {
                             id: {
-                                in: tags
+                                in: intTags
                             }
                         }
                     })

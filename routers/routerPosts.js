@@ -5,10 +5,21 @@ const validator = require('../middlewares/validator.js');
 const { verifySlug } = require('../validators/verifySlug.js');
 const { verifyRequest } = require('../validators/verifyPosts.js');
 const authenticateToken = require('../middlewares/auth.js');
+const multer = require("multer");
+const path = require("path");
 
-router.use(authenticateToken);
+const storage = multer.diskStorage({
+    destination: "public/post_pics",
+    filename: (req, file, cf) => {
+        const fileType = path.extname(file.originalname);
+        cf(null, String(Date.now()) + fileType)
+    }
+});
+const upload = multer({storage});
 
-router.post('/', validator(verifyRequest), create);
+// router.use(authenticateToken);
+
+router.post('/', [upload.single("image"),validator(verifyRequest)], create);
 
 router.get('/', index);
 
@@ -22,6 +33,5 @@ router.get('/:slug', show);
 router.put('/:slug', validator(verifyRequest), update);
 
 router.delete('/:slug', destroy);
-
 
 module.exports = router;

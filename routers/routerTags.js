@@ -6,7 +6,7 @@ const {verifyID} = require('../validators/verifyID.js');
 const {verifyRequest} = require('../validators/verifyTags.js');
 const authenticateToken = require('../middlewares/auth.js');
 
-router.use(authenticateToken);
+// router.use(authenticateToken);
 
 router.post('/', validator(verifyRequest), create);
 

@@ -14,7 +14,7 @@ app.use(cors())
 
 app.use(express.json())
 
-app.use("/auth", routerAuth)
+// app.use("/auth", routerAuth)
 
 app.use("/posts", routerPosts)
 
