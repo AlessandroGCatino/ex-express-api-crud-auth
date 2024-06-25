@@ -211,22 +211,12 @@ const destroy = async (req, res, next) => {
         }
 
         // bonus: verifichiamo se l'utente che sta eliminando il post è l'utente che ha creato il post
-        const userEmail = req.user.email;
-        const requestingUser = await prisma.user.findUnique({
-            where: {
-                email: userEmail
-            }
-        });
         
         const thisPost = await prisma.Post.findUnique({
             where: {
                 slug: req.params.slug
             }
         });
-        
-        if(requestingUser.id !== thisPost.userId){
-            throw new Error("Non sei autorizzato a modificare questo post");
-        }
 
         const deletedPost = await prisma.Post.delete({
             where: { slug: req.params.slug }
