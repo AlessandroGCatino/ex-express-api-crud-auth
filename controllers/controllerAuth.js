@@ -53,7 +53,7 @@ const login = async (req, res, next) => {
             username: user.username
         });
 
-        res.json({ token });
+        res.json({ token, data: user });
 
     }catch(e){
         next(e);
